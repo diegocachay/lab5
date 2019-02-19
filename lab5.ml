@@ -56,7 +56,8 @@ be any of the following options: red, crimson, orange, yellow, green,
 blue, indigo, or violet.
 ......................................................................*)
 
-type color_label = NotImplemented ;;
+type color_label = 
+  Red | Crimson | Orange | Yellow | Green | Blue | Indigo | Violet ;;
 
 (* But this is an overly simple representation of colors. Let's make
 it more usable.
@@ -92,7 +93,9 @@ channels. You'll want to use Simple and RGB as the value constructors
 in this new variant type.
 ......................................................................*)
 
-type color = NotImplemented ;;
+type color = 
+  | Simple of color_label
+  | RGB of (int * int * int) ;;
 
 (* There is an important assumption about the RGB values that
 determine whether a color is valid or not. The RGB type presupposes an
@@ -139,8 +142,12 @@ an Invalid_color exception with a useful message.
 
 exception Invalid_color of string ;;
 
-let validated_rgb = 
-  fun _ -> failwith "validated_rgb not implemented" ;;
+let validated_rgb (col : color) : color = 
+  match col with
+    | Simple x -> Simple x 
+    | RGB (a, b, c) -> 
+      if a >= 0 && a <= 255 && b >= 0 && b <= 255 && c >= 0 && c <= 255 then RGB(a, b, c)
+      else raise (Invalid_color "the RGB values are not between 0 and 255") ;;
 
 (*......................................................................
 Exercise 4: Write a function, make_color, that accepts three integers
@@ -148,8 +155,9 @@ for the channel values and returns a value of the color type. Be sure
 to verify the invariant.
 ......................................................................*)
 
-let make_color = 
-  fun _ -> failwith "make_color not implemented" ;;
+let make_color (a : int) (b : int) (c : int) : color = 
+  let col = RGB (a, b, c)
+  in validated_rgb col ;;
 
 (*......................................................................
 Exercise 5: Write a function, convert_to_rgb, that accepts a color and
@@ -160,14 +168,28 @@ below are some other values you might find helpful.
 
      R  |  G  |  B  | Color
     ----|-----|-----|--------
+    255 |   0 |   0 | Red
+      0 |  64 |   0 | Dark green
+      0 | 255 | 255 | Cyan
+    164 |  16 |  52 | Crimson
     255 | 165 |   0 | Orange
     255 | 255 |   0 | Yellow
      75 |   0 | 130 | Indigo
     240 | 130 | 240 | Violet
 ......................................................................*)
 
-let convert_to_rgb = 
-  fun _ -> failwith "convert_to_rgb not implemented" ;;
+let convert_to_rgb (col : color) : int * int * int = 
+  match col with
+    | RGB (a, b, c) -> (a, b, c)
+    | Simple x -> if x = Red then (255, 0, 0)
+                  else if x = Green then (0, 64, 0)
+                  else if x = Blue then (0, 255, 255)
+                  else if x = Crimson then (164, 16, 52)
+                  else if x = Orange then (255, 165, 0)
+                  else if x = Yellow then (255, 255, 0)
+                  else if x = Indigo then (75, 0, 130)
+                  else if x = Violet then (240, 130, 240) 
+                  else raise (Invalid_color "color does not exist") ;;
 
 (*======================================================================
 Part 2: Dates as a record type
@@ -192,7 +214,7 @@ should be. Then, consider the implications of representing the overall
 data type as a tuple or a record.
 ......................................................................*)
 
-type date = NotImplemented ;;
+type date = {year : int; month : int; day : int} ;;
 
 (* After you've thought it through, look up the Date module in the
 OCaml documentation to see how this was implemented there. If you
@@ -234,8 +256,23 @@ the invariant is violated, and returns the date if valid.
 
 exception Invalid_date of string ;;
 
-let validated_date = 
-  fun _ -> failwith "validated_date not implemented" ;;
+let validated_date ({year; month; day} : date) : date = 
+  if year < 0 then raise (Invalid_date "invalid year")
+  else if month < 1 || month > 12 then raise (Invalid_date "invalid month")
+  else if day < 1 then raise (Invalid_date "invalid day")
+  else match month with
+    | 1 | 3 | 5 | 7 | 8 | 10 | 12 -> if day > 31 then raise (Invalid_date "invalid day")
+                                     else {year; month; day}
+    | 4 | 6 | 9 | 11 -> if day > 30 then raise (Invalid_date "invalid day")
+                        else {year; month; day}
+    | 2 -> if year mod 4 <> 0 then if day > 28 then raise (Invalid_date "invalid day")
+                                   else {year; month; day}
+           else if year mod 100 <> 0 then if day > 29 then raise (Invalid_date "invalid day")
+                                          else {year; month; day}
+           else if year mod 400 <> 0 then if day > 28 then raise (Invalid_date "invalid day")
+                                          else {year; month; day}
+           else if day > 29 then raise (Invalid_date "invalid day") else {year; month; day} 
+    | _ -> raise (Invalid_date "invalid month") ;;
 
 (*======================================================================
 Part 3: Family trees as an algebraic data type
@@ -248,7 +285,7 @@ Exercise 9: Define a person record type. Use the field names "name",
 "favorite", and "birthdate".
 ......................................................................*)
 
-type person = NotImplemented ;;
+type person = {name : string; favorite : color; birthdate : date} ;;
 
 (* Let's now do something with these person values. We'll create a
 data structure that allows us to model simple familial relationships.
@@ -287,8 +324,8 @@ ensure the invariants are preserved for color and date, use them here
 as well.
 ......................................................................*)
 
-let new_child = 
-  fun _ -> failwith "new_child not implemented" ;;
+let new_child (name : string) (col : color) (dat : date) : family = 
+  Single {name = name; favorite = validated_rgb col; birthdate = validated_date dat} ;;
 
 (*......................................................................
 Exercise 11: Write a function that allows a person to marry in to a
@@ -299,8 +336,10 @@ is already made up of a married couple?
 
 exception Family_Trouble of string ;;
 
-let marry = 
-  fun _ -> failwith "marry not implemented" ;;
+let marry (fam : family) (newp : person) : family = 
+  match fam with 
+    | Single p -> Family (p, newp, []) 
+    | Family (_, _, _) -> raise (Family_Trouble "infidelity") ;;
 
 (*......................................................................
 Exercise 12: Write a function that accepts two families, and returns
@@ -311,15 +350,20 @@ assumptions provided in the type definition of family to determine how
 to behave in corner cases.
 ......................................................................*)
 
-let add_to_family = 
-  fun _ -> failwith "add_to_family not implemented" ;;
+let add_to_family (fam1 : family) (fam2 : family) : family = 
+  match fam1 with
+    | Single _ -> raise (Family_Trouble "single parent")
+    | Family (a, b, lst) -> Family (a, b, fam2 :: lst) ;;
 
 (*......................................................................
 Exercise 13: Complete the function below that counts the number of
 people in a given family. Be sure you count all spouses and children.
 ......................................................................*)
 
-let count_people = 
-  fun _ -> failwith "count_people not implemented" ;;
+
+let rec count_people (fam: family): int = 
+    match fam with
+    | Single _ -> 1
+    | Family (_, _, lst) -> List.fold_left (2) (fun acc x -> acc + count_people x) lst ;;
 
 
