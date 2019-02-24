@@ -368,11 +368,10 @@ Exercise 13: Complete the function below that counts the number of
 people in a given family. Be sure you count all spouses and children.
 ......................................................................*)
 
-
-let rec count_people (fam: family): int = 
+let rec count_people (fam: family) : int = 
     match fam with
     | Single _ -> 1
-    | Family (_, _, lst) -> List.fold_left (2) 
-                            (fun acc x -> acc + count_people x) lst ;;
+    | Family (_, _, c) -> 2 + List.fold_left (+) 0
+                                             (List.map count_people c) ;;
 
 
