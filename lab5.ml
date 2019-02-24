@@ -146,7 +146,8 @@ let validated_rgb (col : color) : color =
   match col with
     | Simple x -> Simple x 
     | RGB (a, b, c) -> 
-      if a >= 0 && a <= 255 && b >= 0 && b <= 255 && c >= 0 && c <= 255 then RGB(a, b, c)
+      if a >= 0 && a <= 255 && b >= 0 && b <= 255 && c >= 0 && c <= 255 then
+          RGB(a, b, c)
       else raise (Invalid_color "the RGB values are not between 0 and 255") ;;
 
 (*......................................................................
@@ -181,15 +182,16 @@ below are some other values you might find helpful.
 let convert_to_rgb (col : color) : int * int * int = 
   match col with
     | RGB (a, b, c) -> (a, b, c)
-    | Simple x -> if x = Red then (255, 0, 0)
-                  else if x = Green then (0, 64, 0)
-                  else if x = Blue then (0, 255, 255)
-                  else if x = Crimson then (164, 16, 52)
-                  else if x = Orange then (255, 165, 0)
-                  else if x = Yellow then (255, 255, 0)
-                  else if x = Indigo then (75, 0, 130)
-                  else if x = Violet then (240, 130, 240) 
-                  else raise (Invalid_color "color does not exist") ;;
+    | Simple x -> 
+        match x with
+        | Red -> (255, 0, 0)
+        | Green -> (0, 64, 0)
+        | Blue -> (0, 255, 255)
+        | Crimson -> (164, 16, 52)
+        | Orange -> (255, 165, 0)
+        | Yellow -> (255, 255, 0)
+        | Indigo -> (75, 0, 130)
+        | Violet -> (240, 130, 240) ;;
 
 (*======================================================================
 Part 2: Dates as a record type
@@ -256,7 +258,7 @@ the invariant is violated, and returns the date if valid.
 
 exception Invalid_date of string ;;
 
-let validated_date ({year; month; day} : date) : date = 
+let validated_date ({year; month; day} as date) : date = 
   if year < 0 then raise (Invalid_date "invalid year")
   else if month < 1 || month > 12 then raise (Invalid_date "invalid month")
   else if day < 1 then raise (Invalid_date "invalid day")
@@ -324,8 +326,10 @@ ensure the invariants are preserved for color and date, use them here
 as well.
 ......................................................................*)
 
-let new_child (name : string) (col : color) (dat : date) : family = 
-  Single {name = name; favorite = validated_rgb col; birthdate = validated_date dat} ;;
+let new_child (name : string) (col : color) (date : date) : family = 
+  Single { name = name; 
+           favorite = validated_rgb col; 
+           birthdate = validated_date date} ;;
 
 (*......................................................................
 Exercise 11: Write a function that allows a person to marry in to a
@@ -337,9 +341,9 @@ is already made up of a married couple?
 exception Family_Trouble of string ;;
 
 let marry (fam : family) (newp : person) : family = 
-  match fam with 
-    | Single p -> Family (p, newp, []) 
-    | Family (_, _, _) -> raise (Family_Trouble "infidelity") ;;
+  match fam with
+  | Single _ -> raise (Family_Trouble "singles don't have children")
+  | Family (p1, p2, children) -> Family (p1, p2, child :: children) ;;
 
 (*......................................................................
 Exercise 12: Write a function that accepts two families, and returns
