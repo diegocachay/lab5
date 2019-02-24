@@ -263,17 +263,21 @@ let validated_date ({year; month; day} as date) : date =
   else if month < 1 || month > 12 then raise (Invalid_date "invalid month")
   else if day < 1 then raise (Invalid_date "invalid day")
   else match month with
-    | 1 | 3 | 5 | 7 | 8 | 10 | 12 -> if day > 31 then raise (Invalid_date "invalid day")
+    | 1 | 3 | 5 | 7 | 8 | 10 | 12 -> if day > 31 then 
+                                        raise (Invalid_date "invalid day")
                                      else {year; month; day}
     | 4 | 6 | 9 | 11 -> if day > 30 then raise (Invalid_date "invalid day")
                         else {year; month; day}
     | 2 -> if year mod 4 <> 0 then if day > 28 then raise (Invalid_date "invalid day")
                                    else {year; month; day}
-           else if year mod 100 <> 0 then if day > 29 then raise (Invalid_date "invalid day")
+           else if year mod 100 <> 0 then if day > 29 then 
+                                              raise (Invalid_date "invalid day")
                                           else {year; month; day}
-           else if year mod 400 <> 0 then if day > 28 then raise (Invalid_date "invalid day")
+           else if year mod 400 <> 0 then if day > 28 then 
+                                              raise (Invalid_date "invalid day")
                                           else {year; month; day}
-           else if day > 29 then raise (Invalid_date "invalid day") else {year; month; day} 
+           else if day > 29 then raise (Invalid_date "invalid day") 
+           else {year; month; day} 
     | _ -> raise (Invalid_date "invalid month") ;;
 
 (*======================================================================
@@ -341,9 +345,9 @@ is already made up of a married couple?
 exception Family_Trouble of string ;;
 
 let marry (fam : family) (newp : person) : family = 
-  match fam with
-  | Single _ -> raise (Family_Trouble "singles don't have children")
-  | Family (p1, p2, children) -> Family (p1, p2, child :: children) ;;
+  match fam with 
+    | Single p -> Family (p, newp, []) 
+    | Family _ -> raise (Family_Trouble "infidelity") ;;
 
 (*......................................................................
 Exercise 12: Write a function that accepts two families, and returns
@@ -368,6 +372,7 @@ people in a given family. Be sure you count all spouses and children.
 let rec count_people (fam: family): int = 
     match fam with
     | Single _ -> 1
-    | Family (_, _, lst) -> List.fold_left (2) (fun acc x -> acc + count_people x) lst ;;
+    | Family (_, _, lst) -> List.fold_left (2) 
+                            (fun acc x -> acc + count_people x) lst ;;
 
 
